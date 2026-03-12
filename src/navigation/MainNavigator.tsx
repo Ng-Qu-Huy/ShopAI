@@ -58,7 +58,7 @@ const MainNavigator = () => {
             <Stack.Screen
                 name={ROUTES.SETTINGS}
                 component={SettingsScreen}
-                options={{ title: 'Cài đặt' }}
+                options={{ headerShown: false }}
             />
             <Stack.Screen name={ROUTES.SEARCH} component={SearchScreen} options={{ headerShown: false }} />
             <Stack.Screen name={ROUTES.FAVORITES} component={FavoritesScreen} options={{ headerShown: false }} />
