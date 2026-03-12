@@ -6,14 +6,13 @@ import {
     TouchableOpacity,
     SafeAreaView,
     FlatList,
-    StatusBar,
-    Dimensions
+    StatusBar
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { ROUTES } from '../../constants/routes';
 
-const { width } = Dimensions.get('window');
+
 
 // Dữ liệu danh mục (Đồng bộ với Home)
 const CATEGORIES = [

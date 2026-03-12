@@ -6,7 +6,6 @@ import {
     ScrollView,
     Image,
     TouchableOpacity,
-    SafeAreaView,
     StatusBar,
     Platform,
     Alert

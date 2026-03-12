@@ -1,0 +1,93 @@
+﻿
+> ReactNative@0.0.1 lint
+> eslint .
+
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\App.tsx
+  12:40  warning  Inline style: { flex: 1 }  react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\navigation\TabNavigator.tsx
+  24:29  warning  Do not define components during render. React will see a new component type on every render and destroy the entire subtree窶冱 DOM nodes and state (https://reactjs.org/docs/reconciliation.html#elements-of-different-types). Instead, move this component definition out of the parent component 窶弋abNavigator窶・and pass data as props. If you want to allow component creation in props, set allowAsProps option to true  react/no-unstable-nested-components
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\auth\RegisterScreen.tsx
+   86:75  warning  Inline style: { color: 'red' }   react-native/no-inline-styles
+   97:79  warning  Inline style: { color: 'red' }   react-native/no-inline-styles
+  108:74  warning  Inline style: { color: 'red' }   react-native/no-inline-styles
+  120:83  warning  Inline style: { color: 'red' }   react-native/no-inline-styles
+  134:32  warning  Inline style: { marginTop: 10 }  react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\cart\CartScreen.tsx
+  89:40  warning  Inline style: { padding: 15, paddingBottom: 180 }  react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\category\CategoryScreen.tsx
+  16:9   error    'width' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  72:40  warning  Inline style: { padding: 20 }               react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\checkout\CheckoutScreen.tsx
+    4:37   error    'Platform' is defined but never used                          @typescript-eslint/no-unused-vars
+  117:30   warning  Inline style: { width: 24 }                                   react-native/no-inline-styles
+  120:85   warning  Inline style: { paddingBottom: 100 }                          react-native/no-inline-styles
+  158:38   warning  Inline style: { flexDirection: 'row', alignItems: 'center' }  react-native/no-inline-styles
+  162:38   warning  Inline style: { flexDirection: 'row', alignItems: 'center' }  react-native/no-inline-styles
+  163:75   warning  Inline style: { color: '#EF4444' }                            react-native/no-inline-styles
+  180:42   warning  Inline style: { flexDirection: 'row', alignItems: 'center' }  react-native/no-inline-styles
+  182:95   warning  Inline style: { color: '#2563EB', fontWeight: 'bold' }        react-native/no-inline-styles
+  196:131  warning  Inline style: { color: '#2563EB' }                            react-native/no-inline-styles
+  203:30   warning  Inline style: { flex: 1 }                                     react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\favorites\FavoritesScreen.tsx
+  35:59  warning  Inline style: { backgroundColor: '#2563EB' }  react-native/no-inline-styles
+  50:30  warning  Inline style: { width: 24 }                   react-native/no-inline-styles
+  57:40  warning  Inline style: { padding: 15 }                 react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\home\HomeScreen.tsx
+   70:34   warning  Inline style: { flexDirection: 'row', alignItems: 'center' }                                                                                                                                                                                                                                                                          react-native/no-inline-styles
+   71:89   warning  Inline style: { marginRight: 8 }                                                                                                                                                                                                                                                                                                      react-native/no-inline-styles
+  114:25   warning  Do not define components during render. React will see a new component type on every render and destroy the entire subtree窶冱 DOM nodes and state (https://reactjs.org/docs/reconciliation.html#elements-of-different-types). Instead, move this component definition out of the parent component 窶廩omeScreen窶・and pass data as props  react/no-unstable-nested-components
+  117:49   warning  Inline style: { width: 160, marginRight: 15 }                                                                                                                                                                                                                                                                                         react-native/no-inline-styles
+  117:83   warning  Inline style: { width: '48%', marginBottom: 15 }                                                                                                                                                                                                                                                                                      react-native/no-inline-styles
+  139:85   warning  Inline style: { paddingBottom: 100 }                                                                                                                                                                                                                                                                                                  react-native/no-inline-styles
+  144:38   warning  Inline style: { flexDirection: 'row', alignItems: 'center' }                                                                                                                                                                                                                                                                          react-native/no-inline-styles
+  144:142  warning  Inline style: { marginRight: 5 }                                                                                                                                                                                                                                                                                                      react-native/no-inline-styles
+  144:192  warning  Inline style: { color: '#DC2626', marginBottom: 0 }                                                                                                                                                                                                                                                                                   react-native/no-inline-styles
+  147:188  warning  Inline style: { paddingHorizontal: 20, paddingBottom: 10 }                                                                                                                                                                                                                                                                            react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\orders\OrderDetailScreen.tsx
+   44:30  warning  Inline style: { width: 24 }                         react-native/no-inline-styles
+   51:34  warning  Inline style: { marginLeft: 15 }                    react-native/no-inline-styles
+   80:84  warning  Inline style: { marginTop: 2 }                      react-native/no-inline-styles
+   81:38  warning  Inline style: { marginLeft: 10 }                    react-native/no-inline-styles
+  114:66  warning  Inline style: { fontWeight: 'bold', fontSize: 16 }  react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\orders\OrderHistoryScreen.tsx
+   35:30  warning  Inline style: { flexDirection: 'row', alignItems: 'center' }                           react-native/no-inline-styles
+   41:52  warning  Inline style: { color: '#10B981' }                                                     react-native/no-inline-styles
+   42:52  warning  Inline style: { color: '#EF4444' }                                                     react-native/no-inline-styles
+   43:51  warning  Inline style: { color: '#2563EB' }                                                     react-native/no-inline-styles
+   54:34  warning  Inline style: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }  react-native/no-inline-styles
+   86:30  warning  Inline style: { width: 24 }                                                            react-native/no-inline-styles
+  103:40  warning  Inline style: { padding: 15, paddingBottom: 50 }                                       react-native/no-inline-styles
+  109:38  warning  Inline style: { color: '#94A3B8', fontSize: 12, marginTop: 5 }                         react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\product\ProductListScreen.tsx
+  101:42  warning  Inline style: { color: '#fff', fontWeight: 'bold' }  react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\profile\ProfileScreen.tsx
+    9:5   error    'SafeAreaView' is defined but never used                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   35:22  warning  Do not define components during render. React will see a new component type on every render and destroy the entire subtree窶冱 DOM nodes and state (https://reactjs.org/docs/reconciliation.html#elements-of-different-types). Instead, move this component definition out of the parent component 窶弃rofileScreen窶・and pass data as props  react/no-unstable-nested-components
+   98:40  warning  Inline style: { paddingBottom: 100 }                                                                                                                                                                                                                                                                                                     react-native/no-inline-styles
+  105:38  warning  Inline style: {
+  flexDirection: 'row',
+  width: '100%',
+  justifyContent: 'space-between'
+}                                                                                                                                                                                                                                             react-native/no-inline-styles
+  107:58  warning  Inline style: { fontSize: 11, color: '#64748B' }                                                                                                                                                                                                                                                                                         react-native/no-inline-styles
+
+D:\laptrinhthietbididong\BaiTapApp\ReactNative\src\screens\search\SearchScreen.tsx
+   4:30  error    'FlatList' is defined but never used                            @typescript-eslint/no-unused-vars
+  28:90  warning  Inline style: { marginRight: 4 }                                react-native/no-inline-styles
+  72:56  warning  Inline style: { marginTop: 25 }                                 react-native/no-inline-styles
+  81:34  warning  Inline style: { color: '#94A3B8', fontSize: 12, marginTop: 5 }  react-native/no-inline-styles
+
+笨・56 problems (4 errors, 52 warnings)
+
