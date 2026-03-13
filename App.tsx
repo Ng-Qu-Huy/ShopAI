@@ -5,6 +5,8 @@ import AppNavigator from './src/navigation';
 import { CartProvider } from './src/store/CartContext';
 import { AuthProvider } from './src/store/AuthContext';
 import { OrderProvider } from './src/store/OrderContext';
+import { CartAnimationProvider } from './src/store/CartAnimationContext';
+import CartAnimationOverlay from './src/components/CartAnimationOverlay';
 
 const App = () => {
     return (
@@ -14,7 +16,10 @@ const App = () => {
                 <AuthProvider>
                     <CartProvider>
                         <OrderProvider>
-                            <AppNavigator />
+                            <CartAnimationProvider>
+                                <AppNavigator />
+                                <CartAnimationOverlay />
+                            </CartAnimationProvider>
                         </OrderProvider>
                     </CartProvider>
                 </AuthProvider>

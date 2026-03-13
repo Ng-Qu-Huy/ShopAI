@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, Image, TouchableOpacity,
     FlatList, Dimensions, RefreshControl, StatusBar, Platform, Alert
@@ -6,7 +6,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { ROUTES } from '../../constants/routes';
-import { useCartStore } from '../../store/useCartStore'; // <-- CHUYỂN SANG DÙNG ZUSTAND
+import { useCartStore } from '../../store/useCartStore';
+import { useCartAnimation } from '../../store/CartAnimationContext';
 
 const { width } = Dimensions.get('window');
 
@@ -41,25 +42,25 @@ const HomeScreen = () => {
     const navigation = useNavigation<any>();
     const [refreshing, setRefreshing] = useState(false);
 
-    // --- Lấy hàm addToCart từ Zustand ---
     const addToCart = useCartStore((state) => state.addToCart);
+    const { triggerAnimation } = useCartAnimation();
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
         setTimeout(() => setRefreshing(false), 1500);
     }, []);
 
-    // --- HÀM XỬ LÝ THÊM VÀO GIỎ CÓ THÔNG BÁO ---
-    const handleAddToCart = (item: any) => {
+    // --- FLY-TO-CART: đo tọa độ ảnh SP và trigger animation ---
+    const handleAddToCart = (item: any, imageRef: React.RefObject<any>) => {
         addToCart(item, 1);
-        Alert.alert(
-            'Thành công',
-            `Đã thêm 1 "${item.name}" vào giỏ hàng!`,
-            [
-                { text: 'Tiếp tục mua sắm', style: 'cancel' },
-                { text: 'Đến giỏ hàng', onPress: () => navigation.navigate('MainTabs', { screen: ROUTES.CART_TAB }) }
-            ]
-        );
+        if (imageRef.current) {
+            imageRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
+                triggerAnimation({
+                    startPos: { x, y, width, height },
+                    imageUrl: item.image,
+                });
+            });
+        }
     };
 
     const renderHeader = () => (
@@ -111,26 +112,30 @@ const HomeScreen = () => {
         </View>
     );
 
-    const ProductCard = ({ item, isHorizontal = false }: any) => (
-        <TouchableOpacity
-            activeOpacity={0.9}
-            style={[styles.card, isHorizontal ? { width: 160, marginRight: 15 } : { width: '48%', marginBottom: 15 }]}
-            onPress={() => navigation.navigate(ROUTES.PRODUCT_DETAIL, { product: item })}
-        >
-            <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="contain" />
-            {item.discount && <View style={styles.discountBadge}><Text style={styles.discountText}>{item.discount}</Text></View>}
-            <View style={styles.cardInfo}>
-                <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
-                <Text style={styles.cardPrice}>{item.price}</Text>
-                <View style={styles.cardRating}><Ionicons name="star" size={12} color="#F59E0B" /><Text style={styles.ratingText}>{item.rating} • Đã bán {item.sold}</Text></View>
-            </View>
+    const ProductCard = ({ item, isHorizontal = false }: any) => {
+        // Mỗi card có ref ảnh riêng để đo tọa độ
+        const imageRef = useRef<any>(null);
+        return (
+            <TouchableOpacity
+                activeOpacity={0.9}
+                style={[styles.card, isHorizontal ? { width: 160, marginRight: 15 } : { width: '48%', marginBottom: 15 }]}
+                onPress={() => navigation.navigate(ROUTES.PRODUCT_DETAIL, { product: item })}
+            >
+                <Image ref={imageRef} source={{ uri: item.image }} style={styles.cardImage} resizeMode="contain" />
+                {item.discount && <View style={styles.discountBadge}><Text style={styles.discountText}>{item.discount}</Text></View>}
+                <View style={styles.cardInfo}>
+                    <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={styles.cardPrice}>{item.price}</Text>
+                    <View style={styles.cardRating}><Ionicons name="star" size={12} color="#F59E0B" /><Text style={styles.ratingText}>{item.rating} • Đã bán {item.sold}</Text></View>
+                </View>
 
-            {/* Nút Cộng (+) gọi hàm handleAddToCart */}
-            <TouchableOpacity style={styles.addBtn} onPress={() => handleAddToCart(item)}>
-                <Ionicons name="add" size={20} color="#fff" />
+                {/* Nút Cộng (+) — gọi fly-to-cart */}
+                <TouchableOpacity style={styles.addBtn} onPress={() => handleAddToCart(item, imageRef)}>
+                    <Ionicons name="add" size={20} color="#fff" />
+                </TouchableOpacity>
             </TouchableOpacity>
-        </TouchableOpacity>
-    );
+        );
+    };
 
     return (
         <View style={styles.container}>

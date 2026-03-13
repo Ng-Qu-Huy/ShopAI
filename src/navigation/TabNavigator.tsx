@@ -1,17 +1,76 @@
-import React from 'react';
-import { View, Platform, StyleSheet } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Platform, StyleSheet, Animated } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { ROUTES } from '../constants/routes';
+import { useCartAnimation } from '../store/CartAnimationContext';
 
 // Import các màn hình
 import HomeScreen from '../screens/home/HomeScreen';
-import CategoryScreen from '../screens/category/CategoryScreen'; // <--- IMPORT MỚI
+import CategoryScreen from '../screens/category/CategoryScreen';
 import CartScreen from '../screens/cart/CartScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
+// ========================
+// CartTabIcon — component riêng để dùng hook và ref đo tọa độ
+// ========================
+const CartTabIcon = ({ focused, color }: { focused: boolean; color: string }) => {
+    const iconRef = useRef<View>(null);
+    const { setCartIconPosition, bounceSignal } = useCartAnimation();
+
+    // Bounce animation value
+    const bounceScale = useRef(new Animated.Value(1)).current;
+
+    // Đo tọa độ tuyệt đối của icon sau khi render
+    const measureCartIcon = () => {
+        if (iconRef.current) {
+            iconRef.current.measureInWindow((x, y, width, height) => {
+                if (width > 0) { // Đảm bảo đo được giá trị hợp lệ
+                    setCartIconPosition({ x, y, width, height });
+                }
+            });
+        }
+    };
+
+    // Bounce animation khi nhận tín hiệu từ Context
+    useEffect(() => {
+        if (bounceSignal === 0) return;
+        Animated.sequence([
+            Animated.timing(bounceScale, {
+                toValue: 1.5,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+            Animated.spring(bounceScale, {
+                toValue: 1,
+                friction: 3,
+                tension: 200,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [bounceSignal]);
+
+    const iconName = focused ? 'cart' : 'cart-outline';
+
+    return (
+        <View
+            ref={iconRef}
+            onLayout={measureCartIcon} // Đo ngay khi layout xong
+            style={styles.iconContainer}
+        >
+            <Animated.View style={{ transform: [{ scale: bounceScale }] }}>
+                <Ionicons name={iconName} size={24} color={color} />
+            </Animated.View>
+            {focused && <View style={[styles.activeDot, { backgroundColor: color }]} />}
+        </View>
+    );
+};
+
+// ========================
+// TabNavigator
+// ========================
 const TabNavigator = () => {
     return (
         <Tab.Navigator
@@ -22,15 +81,16 @@ const TabNavigator = () => {
                 tabBarActiveTintColor: '#2563EB',
                 tabBarInactiveTintColor: '#94A3B8',
                 tabBarIcon: ({ focused, color }) => {
-                    let iconName = '';
+                    // Cart tab dùng CartTabIcon riêng để đo tọa độ + bounce
+                    if (route.name === ROUTES.CART_TAB) {
+                        return <CartTabIcon focused={focused} color={color} />;
+                    }
 
-                    // --- LOGIC CHỌN ICON ---
+                    let iconName = '';
                     if (route.name === ROUTES.HOME_TAB) {
                         iconName = focused ? 'home' : 'home-outline';
                     } else if (route.name === ROUTES.CATEGORY_TAB) {
-                        iconName = focused ? 'grid' : 'grid-outline'; // <--- ICON CHO DANH MỤC
-                    } else if (route.name === ROUTES.CART_TAB) {
-                        iconName = focused ? 'cart' : 'cart-outline';
+                        iconName = focused ? 'grid' : 'grid-outline';
                     } else if (route.name === ROUTES.PROFILE_TAB) {
                         iconName = focused ? 'person' : 'person-outline';
                     }
@@ -45,10 +105,7 @@ const TabNavigator = () => {
             })}
         >
             <Tab.Screen name={ROUTES.HOME_TAB} component={HomeScreen} />
-
-            {/* THÊM TAB DANH MỤC Ở ĐÂY */}
             <Tab.Screen name={ROUTES.CATEGORY_TAB} component={CategoryScreen} />
-
             <Tab.Screen name={ROUTES.CART_TAB} component={CartScreen} />
             <Tab.Screen name={ROUTES.PROFILE_TAB} component={ProfileScreen} />
         </Tab.Navigator>

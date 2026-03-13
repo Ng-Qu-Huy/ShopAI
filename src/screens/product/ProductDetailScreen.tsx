@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     View, Text, StyleSheet, Image, TouchableOpacity, ScrollView,
     StatusBar, Modal, TouchableWithoutFeedback, Platform, Alert
@@ -7,6 +7,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCartStore } from '../../store/useCartStore';
 import { useFavoritesStore } from '../../store/useFavoritesStore';
+import { useCartAnimation } from '../../store/CartAnimationContext';
 import { ROUTES } from '../../constants/routes';
 
 const ProductDetailScreen = () => {
@@ -20,6 +21,10 @@ const ProductDetailScreen = () => {
     // --- Favorites Store ---
     const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
     const isFavorite = useFavoritesStore((state) => state.isFavorite(product.id));
+
+    // --- Animation Store ---
+    const { triggerAnimation } = useCartAnimation();
+    const imageRef = useRef<any>(null);
 
     const [isSheetVisible, setSheetVisible] = useState(false);
     const [actionType, setActionType] = useState<'cart' | 'buy'>('cart');
@@ -42,30 +47,32 @@ const ProductDetailScreen = () => {
         if (actionType === 'cart') {
             // NẾU LÀ THÊM VÀO GIỎ: Lưu vào Zustand Store
             addToCart(product, quantity);
-            Alert.alert(
-                'Thành công',
-                `Đã thêm ${quantity} sản phẩm vào giỏ hàng!`,
-                [
-                    { text: 'Tiếp tục mua sắm', style: 'cancel' },
-                    { text: 'Đến giỏ hàng', onPress: () => navigation.navigate('MainTabs', { screen: ROUTES.CART_TAB }) }
-                ]
-            );
+
+            // --- Hiệu ứng bay vào giỏ ---
+            setTimeout(() => { // Đợi modal đóng xong màn hình hết mờ
+                if (imageRef.current) {
+                    imageRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
+                        triggerAnimation({
+                            startPos: { x, y, width, height },
+                            imageUrl: product.image,
+                        });
+                    });
+                }
+            }, 300);
+
         } else {
-            // NẾU LÀ MUA NGAY: Không lưu vào giỏ hàng, truyền dữ liệu thẳng sang màn Checkout
+            // Mua ngay
             const rawPrice = typeof product.price === 'number'
                 ? product.price
                 : parseInt(product.price.toString().replace(/[^0-9]/g, ''), 10);
 
-            setTimeout(() => {
-                navigation.navigate(ROUTES.CHECKOUT, {
-                    isBuyNow: true,
-                    buyNowItem: {
-                        ...product,
-                        quantity: quantity,
-                        rawPrice: rawPrice
-                    }
-                });
-            }, 300);
+            navigation.navigate(ROUTES.CHECKOUT, {
+                buyNowItem: {
+                    ...product,
+                    quantity: quantity,
+                    rawPrice: rawPrice,
+                }
+            });
         }
     };
 
@@ -148,7 +155,12 @@ const ProductDetailScreen = () => {
                     <TouchableWithoutFeedback onPress={() => setSheetVisible(false)}><View style={styles.modalBackdrop} /></TouchableWithoutFeedback>
                     <View style={styles.bottomSheet}>
                         <View style={styles.sheetHeader}>
-                            <Image source={{ uri: product.image }} style={styles.sheetImage} />
+                            <Image
+                                ref={imageRef}
+                                source={{ uri: product.image }}
+                                style={styles.sheetImage}
+                                resizeMode="contain"
+                            />
                             <View style={styles.sheetHeaderInfo}>
                                 <Text style={styles.sheetPrice}>{product.price.toLocaleString('vi-VN')}đ</Text>
                                 <Text style={styles.sheetStock}>Kho: 124</Text>
