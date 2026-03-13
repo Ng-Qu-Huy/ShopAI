@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, SafeAreaView, StatusBar, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, SafeAreaView, StatusBar, ScrollView, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { ROUTES } from '../../constants/routes';
@@ -70,8 +70,18 @@ const OrderHistoryScreen = () => {
                     <Text style={styles.totalLabel}>Thành tiền: <Text style={styles.totalPrice}>{formatCurrency(item.totalPrice)}</Text></Text>
                 </View>
                 <View style={styles.actionRow}>
-                    <TouchableOpacity style={styles.outlineBtn}><Text style={styles.outlineBtnText}>Liên hệ Shop</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.primaryBtn}><Text style={styles.primaryBtnText}>Xem chi tiết</Text></TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.outlineBtn}
+                        onPress={() => Alert.alert('Liên hệ Shop', 'Hotline: 1800-ELECTRO\nEmail: support@electroshop.vn', [{ text: 'Đóng' }])}
+                    >
+                        <Text style={styles.outlineBtnText}>Liên hệ Shop</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.primaryBtn}
+                        onPress={() => navigation.navigate(ROUTES.ORDER_DETAIL, { orderId: item.id })}
+                    >
+                        <Text style={styles.primaryBtnText}>Xem chi tiết</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </View>

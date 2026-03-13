@@ -6,6 +6,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCartStore } from '../../store/useCartStore';
+import { useFavoritesStore } from '../../store/useFavoritesStore';
 import { ROUTES } from '../../constants/routes';
 
 const ProductDetailScreen = () => {
@@ -15,6 +16,10 @@ const ProductDetailScreen = () => {
 
     const addToCart = useCartStore((state) => state.addToCart);
     const totalItems = useCartStore((state) => state.getTotalItems());
+
+    // --- Favorites Store ---
+    const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
+    const isFavorite = useFavoritesStore((state) => state.isFavorite(product.id));
 
     const [isSheetVisible, setSheetVisible] = useState(false);
     const [actionType, setActionType] = useState<'cart' | 'buy'>('cart');
@@ -91,7 +96,22 @@ const ProductDetailScreen = () => {
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
                 <View style={styles.titleRow}>
                     <Text style={styles.name}>{product.name}</Text>
-                    <TouchableOpacity><Ionicons name="heart-outline" size={26} color="#EF4444" /></TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => {
+                            // Chuẩn bị rawPrice trước khi toggle
+                            const rawPrice = typeof product.price === 'number'
+                                ? product.price
+                                : parseInt(product.price.toString().replace(/[^0-9]/g, ''), 10);
+                            toggleFavorite({ ...product, rawPrice });
+                        }}
+                        style={styles.favoriteBtn}
+                    >
+                        <Ionicons
+                            name={isFavorite ? 'heart' : 'heart-outline'}
+                            size={26}
+                            color="#EF4444"
+                        />
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.ratingRow}>
@@ -194,7 +214,8 @@ const styles = StyleSheet.create({
     qtyValue: { fontSize: 16, fontWeight: 'bold', color: '#333', width: 30, textAlign: 'center' },
     sheetFooter: { paddingTop: 10 },
     confirmBtn: { backgroundColor: '#EF4444', height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-    confirmBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+    confirmBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    favoriteBtn: { padding: 4 },
 });
 
 export default ProductDetailScreen;

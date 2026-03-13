@@ -1,35 +1,95 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar } from 'react-native';
+import {
+    View, Text, StyleSheet, ScrollView,
+    TouchableOpacity, Image, SafeAreaView, StatusBar
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useOrder, Order } from '../../store/OrderContext';
+
+// --- Cấu hình trạng thái đơn hàng ---
+const STATUS_CONFIG: Record<string, { label: string; icon: string; color: string; bannerText: string; bannerDesc: string }> = {
+    waiting: {
+        label: 'Chờ xác nhận',
+        icon: 'hourglass-outline',
+        color: '#F59E0B',
+        bannerText: 'Đơn hàng đang chờ xác nhận',
+        bannerDesc: 'Shop sẽ xác nhận đơn trong thời gian sớm nhất.',
+    },
+    shipping: {
+        label: 'Đang giao hàng',
+        icon: 'bicycle',
+        color: '#2563EB',
+        bannerText: 'Đơn hàng đang giao đến bạn',
+        bannerDesc: 'Dự kiến giao trong 1 - 2 ngày làm việc.',
+    },
+    delivered: {
+        label: 'Đã giao hàng',
+        icon: 'checkmark-circle',
+        color: '#10B981',
+        bannerText: 'Đơn hàng đã giao thành công!',
+        bannerDesc: 'Cảm ơn bạn đã mua sắm tại ElectroShop.',
+    },
+    cancelled: {
+        label: 'Đã hủy',
+        icon: 'close-circle',
+        color: '#EF4444',
+        bannerText: 'Đơn hàng đã bị hủy',
+        bannerDesc: 'Đơn hàng này đã được hủy thành công.',
+    },
+};
+
+// Hằng số phí vận chuyển (đồng bộ với CheckoutScreen)
+const SHIPPING_FEE = 30000;
 
 const OrderDetailScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const route = useRoute<any>();
-    const { orderId } = route.params || { orderId: 'DH10239' };
+    const { orderId } = route.params || {};
 
-    // Giả lập dữ liệu chi tiết của 1 đơn hàng
-    const orderDetail = {
-        id: orderId,
-        date: '2025-10-20 14:30',
-        status: 'shipping',
-        paymentMethod: 'Thanh toán khi nhận hàng (COD)',
-        address: {
-            name: 'Nguyễn Văn Dev',
-            phone: '0901234567',
-            full: '123 Đường Lập Trình, Phường Công Nghệ, TP. HCM'
-        },
-        items: [
-            { id: 1, name: 'Arduino Uno R3 DIP', quantity: 2, price: 150000, image: 'https://m.media-amazon.com/images/I/71J15x0e36L.jpg' },
-            { id: 2, name: 'Cảm biến DHT11', quantity: 1, price: 25000, image: 'https://m.media-amazon.com/images/I/51+6k8v+S+L._AC_SX679_.jpg' }
-        ],
-        subtotal: 325000,
-        shippingFee: 30000,
-        discount: 0,
-        total: 355000
-    };
+    // --- Lấy đơn hàng thật từ OrderContext ---
+    const { orders } = useOrder();
+    const order: Order | undefined = orders.find(o => o.id === orderId);
 
-    const formatCurrency = (amount: number) => amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+    const formatCurrency = (amount: number) =>
+        amount.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+
+    // --- Trường hợp không tìm thấy đơn hàng ---
+    if (!order) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                        <Ionicons name="arrow-back" size={24} color="#1E293B" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Chi tiết đơn hàng</Text>
+                    <View style={{ width: 34 }} />
+                </View>
+                <View style={styles.notFoundContainer}>
+                    <Ionicons name="receipt-outline" size={72} color="#CBD5E1" />
+                    <Text style={styles.notFoundTitle}>Không tìm thấy đơn hàng</Text>
+                    <Text style={styles.notFoundSub}>Mã đơn hàng #{orderId} không tồn tại.</Text>
+                    <TouchableOpacity style={styles.goBackBtn} onPress={() => navigation.goBack()}>
+                        <Text style={styles.goBackBtnText}>Quay lại</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    const statusConf = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.waiting;
+
+    // Tính subtotal từ danh sách sản phẩm
+    const subtotal = order.items.reduce((sum, item) => {
+        const price = typeof item.price === 'number'
+            ? item.price
+            : parseInt(item.price.toString().replace(/[^0-9]/g, ''), 10);
+        return sum + price * item.quantity;
+    }, 0);
+
+    // Phí ship cố định, discount = totalPrice - subtotal - shippingFee (có thể âm nếu có voucher)
+    const discount = subtotal + SHIPPING_FEE - order.totalPrice;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -41,78 +101,96 @@ const OrderDetailScreen = () => {
                     <Ionicons name="arrow-back" size={24} color="#1E293B" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Chi tiết đơn hàng</Text>
-                <View style={{ width: 24 }} />
+                <View style={{ width: 34 }} />
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Status Banner */}
-                <View style={styles.statusBanner}>
-                    <Ionicons name="bicycle" size={32} color="#fff" />
-                    <View style={{ marginLeft: 15 }}>
-                        <Text style={styles.statusTitle}>Đơn hàng đang giao đến bạn</Text>
-                        <Text style={styles.statusDesc}>Dự kiến giao vào ngày mai</Text>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+
+                {/* Status Banner — Động theo trạng thái thực */}
+                <View style={[styles.statusBanner, { backgroundColor: statusConf.color }]}>
+                    <Ionicons name={statusConf.icon as any} size={32} color="#fff" />
+                    <View style={{ marginLeft: 15, flex: 1 }}>
+                        <Text style={styles.statusTitle} numberOfLines={1}>{statusConf.bannerText}</Text>
+                        <Text style={styles.statusDesc}>{statusConf.bannerDesc}</Text>
                     </View>
                 </View>
 
-                {/* Timeline Giao hàng (Mô phỏng) */}
+                {/* Thông tin đơn hàng */}
                 <View style={styles.section}>
-                    <View style={styles.timelineRow}>
-                        <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-                        <View style={styles.timelineContent}>
-                            <Text style={styles.timelineTextActive}>Đơn hàng đã xuất kho</Text>
-                            <Text style={styles.timelineTime}>20-10-2025 16:45</Text>
-                        </View>
+                    <Text style={styles.sectionTitle}>Thông tin đơn hàng</Text>
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Mã đơn hàng</Text>
+                        <Text style={styles.infoValueBold}>{order.id}</Text>
                     </View>
-                    <View style={styles.timelineLine} />
-                    <View style={styles.timelineRow}>
-                        <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-                        <View style={styles.timelineContent}>
-                            <Text style={styles.timelineTextActive}>Đã xác nhận đơn hàng</Text>
-                            <Text style={styles.timelineTime}>20-10-2025 14:35</Text>
-                        </View>
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Ngày đặt</Text>
+                        <Text style={styles.infoValue}>{order.date}</Text>
                     </View>
-                </View>
-
-                {/* Địa chỉ nhận hàng */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Địa chỉ nhận hàng</Text>
-                    <View style={styles.addressBox}>
-                        <Ionicons name="location" size={20} color="#64748B" style={{ marginTop: 2 }} />
-                        <View style={{ marginLeft: 10 }}>
-                            <Text style={styles.addressName}>{orderDetail.address.name} - {orderDetail.address.phone}</Text>
-                            <Text style={styles.addressText}>{orderDetail.address.full}</Text>
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Trạng thái</Text>
+                        <View style={[styles.statusPill, { backgroundColor: `${statusConf.color}20` }]}>
+                            <Text style={[styles.statusPillText, { color: statusConf.color }]}>
+                                {statusConf.label}
+                            </Text>
                         </View>
                     </View>
                 </View>
 
-                {/* Danh sách sản phẩm */}
+                {/* Danh sách sản phẩm — Dữ liệu thực */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Sản phẩm ({orderDetail.items.length})</Text>
-                    {orderDetail.items.map(item => (
-                        <View key={item.id} style={styles.itemRow}>
-                            <Image source={{ uri: item.image }} style={styles.itemImage} />
-                            <View style={styles.itemInfo}>
-                                <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-                                <View style={styles.itemMeta}>
-                                    <Text style={styles.itemPrice}>{formatCurrency(item.price)}</Text>
-                                    <Text style={styles.itemQty}>x{item.quantity}</Text>
+                    <Text style={styles.sectionTitle}>Sản phẩm ({order.items.length})</Text>
+                    {order.items.map((item, index) => {
+                        const itemPrice = typeof item.price === 'number'
+                            ? item.price
+                            : parseInt(item.price.toString().replace(/[^0-9]/g, ''), 10);
+                        return (
+                            <View
+                                key={`${item.id}-${index}`}
+                                style={[styles.itemRow, index === order.items.length - 1 && { borderBottomWidth: 0 }]}
+                            >
+                                <Image source={{ uri: item.image }} style={styles.itemImage} resizeMode="contain" />
+                                <View style={styles.itemInfo}>
+                                    <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                                    <View style={styles.itemMeta}>
+                                        <Text style={styles.itemPrice}>{formatCurrency(itemPrice)}</Text>
+                                        <Text style={styles.itemQty}>x{item.quantity}</Text>
+                                    </View>
+                                    <Text style={styles.itemSubtotal}>
+                                        Thành tiền: {formatCurrency(itemPrice * item.quantity)}
+                                    </Text>
                                 </View>
                             </View>
-                        </View>
-                    ))}
+                        );
+                    })}
                 </View>
 
-                {/* Tổng kết thanh toán */}
+                {/* Tổng kết thanh toán — Tính từ dữ liệu thực */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Thông tin thanh toán</Text>
-                    <View style={styles.summaryRow}><Text style={styles.lbl}>Mã đơn hàng</Text><Text style={styles.val}>{orderDetail.id}</Text></View>
-                    <View style={styles.summaryRow}><Text style={styles.lbl}>Phương thức</Text><Text style={styles.val}>{orderDetail.paymentMethod}</Text></View>
+                    <Text style={styles.sectionTitle}>Chi tiết thanh toán</Text>
+
+                    <View style={styles.summaryRow}>
+                        <Text style={styles.lbl}>Tổng tiền hàng</Text>
+                        <Text style={styles.val}>{formatCurrency(subtotal)}</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                        <Text style={styles.lbl}>Phí vận chuyển</Text>
+                        <Text style={styles.val}>{formatCurrency(SHIPPING_FEE)}</Text>
+                    </View>
+                    {discount > 0 && (
+                        <View style={styles.summaryRow}>
+                            <Text style={styles.lbl}>Giảm giá / Voucher</Text>
+                            <Text style={[styles.val, { color: '#2563EB' }]}>- {formatCurrency(discount)}</Text>
+                        </View>
+                    )}
+
                     <View style={styles.divider} />
-                    <View style={styles.summaryRow}><Text style={styles.lbl}>Tổng tiền hàng</Text><Text style={styles.val}>{formatCurrency(orderDetail.subtotal)}</Text></View>
-                    <View style={styles.summaryRow}><Text style={styles.lbl}>Phí vận chuyển</Text><Text style={styles.val}>{formatCurrency(orderDetail.shippingFee)}</Text></View>
-                    <View style={styles.divider} />
-                    <View style={styles.summaryRow}><Text style={{ fontWeight: 'bold', fontSize: 16 }}>Tổng thanh toán</Text><Text style={styles.totalPrice}>{formatCurrency(orderDetail.total)}</Text></View>
+
+                    <View style={styles.summaryRow}>
+                        <Text style={styles.totalLabel}>Tổng thanh toán</Text>
+                        <Text style={styles.totalPrice}>{formatCurrency(order.totalPrice)}</Text>
+                    </View>
                 </View>
+
             </ScrollView>
         </SafeAreaView>
     );
@@ -120,38 +198,92 @@ const OrderDetailScreen = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F1F5F9' },
-    header: { flexDirection: 'row', justifyContent: 'space-between', padding: 15, backgroundColor: '#fff', alignItems: 'center' },
+
+    // Header
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: 15,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E2E8F0',
+    },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B' },
     backBtn: { padding: 5 },
-    statusBanner: { backgroundColor: '#2563EB', padding: 20, flexDirection: 'row', alignItems: 'center' },
-    statusTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    statusDesc: { color: '#DBEAFE', fontSize: 13, marginTop: 4 },
-    section: { backgroundColor: '#fff', padding: 15, marginBottom: 10 },
+
+    // Status Banner
+    statusBanner: {
+        padding: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    statusTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+    statusDesc: { color: 'rgba(255,255,255,0.85)', fontSize: 13, lineHeight: 18 },
+
+    // Section
+    section: { backgroundColor: '#fff', padding: 15, marginTop: 10 },
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#1E293B', marginBottom: 15 },
 
-    timelineRow: { flexDirection: 'row', alignItems: 'flex-start' },
-    timelineContent: { marginLeft: 10, paddingBottom: 15 },
-    timelineLine: { width: 1, height: 30, backgroundColor: '#10B981', marginLeft: 9, marginTop: -15, marginBottom: 5 },
-    timelineTextActive: { color: '#10B981', fontWeight: '600', fontSize: 14 },
-    timelineTime: { color: '#94A3B8', fontSize: 12, marginTop: 2 },
+    // Info rows
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    infoLabel: { fontSize: 14, color: '#64748B' },
+    infoValue: { fontSize: 14, color: '#1E293B', fontWeight: '500', flexShrink: 1, textAlign: 'right', marginLeft: 10 },
+    infoValueBold: { fontSize: 14, color: '#1E293B', fontWeight: '700', flex: 1, textAlign: 'right' },
 
-    addressBox: { flexDirection: 'row' },
-    addressName: { fontWeight: 'bold', color: '#333', marginBottom: 4 },
-    addressText: { color: '#64748B', lineHeight: 20 },
+    // Status pill
+    statusPill: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+    statusPillText: { fontSize: 12, fontWeight: '700' },
 
-    itemRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#F1F5F9', paddingBottom: 15, marginBottom: 15 },
-    itemImage: { width: 60, height: 60, borderRadius: 8, backgroundColor: '#F8F9FA' },
+    // Items
+    itemRow: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F5F9',
+        paddingBottom: 14,
+        marginBottom: 14,
+    },
+    itemImage: { width: 65, height: 65, borderRadius: 8, backgroundColor: '#F8F9FA' },
     itemInfo: { flex: 1, marginLeft: 12 },
-    itemName: { color: '#334155', fontWeight: '500', marginBottom: 5 },
-    itemMeta: { flexDirection: 'row', justifyContent: 'space-between' },
-    itemPrice: { fontWeight: 'bold', color: '#2563EB' },
-    itemQty: { color: '#64748B' },
+    itemName: { color: '#334155', fontWeight: '500', marginBottom: 6, lineHeight: 20, fontSize: 14 },
+    itemMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    itemPrice: { fontWeight: 'bold', color: '#2563EB', fontSize: 14 },
+    itemQty: { color: '#64748B', fontSize: 13 },
+    itemSubtotal: { fontSize: 12, color: '#94A3B8', marginTop: 4 },
 
-    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+    // Summary
+    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
     lbl: { color: '#64748B', fontSize: 14 },
     val: { color: '#1E293B', fontSize: 14, fontWeight: '500' },
     divider: { height: 1, backgroundColor: '#E2E8F0', marginVertical: 10 },
-    totalPrice: { fontSize: 18, fontWeight: 'bold', color: '#EF4444' }
+    totalLabel: { fontWeight: 'bold', fontSize: 15, color: '#1E293B' },
+    totalPrice: { fontSize: 18, fontWeight: 'bold', color: '#EF4444' },
+
+    // Not Found State
+    notFoundContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+    },
+    notFoundTitle: { fontSize: 18, fontWeight: 'bold', color: '#334155', marginTop: 16, marginBottom: 8 },
+    notFoundSub: { fontSize: 14, color: '#94A3B8', textAlign: 'center', marginBottom: 24 },
+    goBackBtn: {
+        backgroundColor: '#2563EB',
+        paddingHorizontal: 28,
+        paddingVertical: 12,
+        borderRadius: 25,
+    },
+    goBackBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
 });
 
 export default OrderDetailScreen;
